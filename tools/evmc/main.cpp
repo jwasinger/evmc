@@ -5,6 +5,7 @@
 #include <CLI/CLI.hpp>
 #include <evmc/loader.h>
 #include <evmc/mocked_host.hpp>
+#include <chrono>
 
 #include "utils.hpp"
 
@@ -59,11 +60,15 @@ int main(int argc, const char** argv)
 
             std::cout << "Executing on " << rev << " with " << msg.gas << " gas limit\n"
                       << "in " << vm_config << "\n";
+            const auto start = std::chrono::steady_clock::now();
             const auto result = vm.execute(host, rev, msg, code.data(), code.size());
+            const auto end = std::chrono::steady_clock::now();
+            const auto time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
             const auto gas_used = msg.gas - result.gas_left;
 
-            std::cout << "\nResult:   " << result.status_code << "\nGas used: " << gas_used << "\n";
+            std::cout << "\nResult:   " << result.status_code << "\nGas used: " << gas_used << "\n"
+                      << "\nTime elapsed: " << time_elapsed << "\n";
 
             if (result.status_code == EVMC_SUCCESS || result.status_code == EVMC_REVERT)
                 std::cout << "Output:   " << hex(result.output_data, result.output_size) << "\n";
